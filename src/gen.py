@@ -16,9 +16,13 @@ Arguments:  type - key type
 
 Returns:    generated public key
 """
-def generate_key(type, bits):
+def generate_key(ktype, bits):
     key = crypto.PKey()
-    key.generate_key(type, bits)
+    if ktype == 'RSA':
+        key.generate_key(crypto.TYPE_RSA, bits)
+    else:
+        key.generate_key(crypto.TYPE_DSA, bits)
+    
     f = open(KEY_FILE, "w")
     f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, key))
     f.close()
@@ -51,16 +55,21 @@ Arguments:  pkey   - The key to associate with the request
             digest - Digestion method to use for signing, default is sha256
 Returns:   The certificate request
 """
-def create_csr(pkey, name,  digest="sha256"):
+def create_csr(pkey, name,  digest="sha256", ktype='RSA', bits=1024):
     
     req = crypto.X509Req()
     subj = req.get_subject()
  
     for key, value in name.items():
         setattr(subj, key, value)
- 
-    req.set_pubkey(pkey)
-    req.sign(pkey, digest)
+    
+    if pkey is None:
+        key = generate_key(ktype, bits)
+    else:
+        key = load_key(pkey)
+
+    req.set_pubkey(key)
+    req.sign(key, digest)
     f = open(CSR_FILE, "w")
     f.write(crypto.dump_certificate_request(crypto.FILETYPE_PEM, req))
     f.close()
@@ -70,7 +79,8 @@ def create_csr(pkey, name,  digest="sha256"):
 """
 Create a certificate request.
  
-Arguments:  pkey   - The key to associate with the request
+Arguments:  type - key type
+            bits - number of bits
             **name - The name of the subject of the request
             digest - Digestion method to use for signing, default is sha256
             key_file - File to store the public key, default is KEY_FILE
@@ -81,39 +91,31 @@ Arguments:  pkey   - The key to associate with the request
 
 Returns:   The self signed certificate
 """
-def create_selfsigned_cert(type_, bits, name,  digest="sha256",
-                               key_file=KEY_FILE, cert_file=CERT_FILE,
-                               exprdate=10, serial_number=-1):
-   k = generate_key(type_, bits)
-   cert = crypto.X509()
-   subj = cert.get_subject()
+def create_selfsigned_crt(ktype, bits, name,  
+                        key_file, cert_file, digest="sha256",
+                        exprdate=10, serial_number=-1):
+    generate_key(ktype, bits)
+
+    if key_file is None:
+        key_file = KEY_FILE
+
+    if cert_file is None:
+        cert_file = CERT_FILE
+
+    cert = crypto.X509()
+    subj = cert.get_subject()
   
-   for key, value in name.items():
+    for key, value in name.items():
        setattr(subj, key, value)
  
-   if serial_number == -1:
+    if serial_number == -1:
        serial_number=random.getrandbits(64)
  
-   cert.set_serial_number(serial_number)
-   cert.gmtime_adj_notBefore(0)
-   cert.gmtime_adj_notAfter(exprdate*365*24*60*60)
-   cert.set_issuer(cert.get_subject())
-   cert.set_pubkey(k)
-   cert.sign(k, digest)
-   open(cert_file, 'wt').write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-   open(key_file, 'wt').write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
-
-
-res = generate_key(crypto.TYPE_RSA, 1024)
-
-name = {'C' : 'FR', 
-        'ST' : 'Val-De-Marne', 
-        'L' : 'Maisons-Alfort',
-        'O' : 'MarouaCo',
-        'OU' : 'titi',
-        'CN' : 'toto',
-        'emailAddress' : 'titi@mail.com'}
-req = create_csr(res, name)
-print(req)
-
-t = create_selfsigned_cert(crypto.TYPE_RSA, 1024, name)
+    cert.set_serial_number(serial_number)
+    cert.gmtime_adj_notBefore(0)
+    cert.gmtime_adj_notAfter(exprdate*365*24*60*60)
+    cert.set_issuer(cert.get_subject())
+    cert.set_pubkey(k)
+    cert.sign(k, digest)
+    open(cert_file, 'wt').write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+    open(key_file, 'wt').write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
