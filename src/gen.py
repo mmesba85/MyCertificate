@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from OpenSSL import crypto, SSL
 import subprocess, os, sys
 import random
@@ -23,7 +21,7 @@ def generate_key(ktype, bits):
     else:
         key.generate_key(crypto.TYPE_DSA, bits)
     
-    f = open(KEY_FILE, "w")
+    f = open(KEY_FILE, "wb")
     f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, key))
     f.close()
     return key
@@ -64,8 +62,13 @@ def create_csr(pkey, name,  digest="sha256", ktype='RSA', bits=1024):
     req = crypto.X509Req()
     subj = req.get_subject()
  
-    for key, value in name.items():
-        setattr(subj, key, value)
+    try:
+        for key, value in name.items():
+            setattr(subj, key, value)
+    except Exception as e:
+        print("Error in configuration file.")
+        exit(1)
+        
     
     if pkey is None:
         key = generate_key(ktype, bits)
@@ -74,7 +77,7 @@ def create_csr(pkey, name,  digest="sha256", ktype='RSA', bits=1024):
 
     req.set_pubkey(key)
     req.sign(key, digest)
-    f = open(CSR_FILE, "w")
+    f = open(CSR_FILE, "wb")
     f.write(crypto.dump_certificate_request(crypto.FILETYPE_PEM, req))
     f.close()
 
@@ -98,7 +101,7 @@ Returns:   The self signed certificate
 def create_selfsigned_crt(ktype, bits, name,  
                         key_file, cert_file, digest="sha256",
                         exprdate=10, serial_number=-1):
-    generate_key(ktype, bits)
+    k = generate_key(ktype, bits)
 
     if key_file is None:
         key_file = KEY_FILE
@@ -108,10 +111,14 @@ def create_selfsigned_crt(ktype, bits, name,
 
     cert = crypto.X509()
     subj = cert.get_subject()
-  
-    for key, value in name.items():
-       setattr(subj, key, value)
- 
+    
+    try:
+        for key, value in name.items():
+            setattr(subj, key, value)
+    except Exception as e:
+        print("Error in configuration file.")
+        exit(1)
+
     if serial_number == -1:
        serial_number=random.getrandbits(64)
  
@@ -121,5 +128,5 @@ def create_selfsigned_crt(ktype, bits, name,
     cert.set_issuer(cert.get_subject())
     cert.set_pubkey(k)
     cert.sign(k, digest)
-    open(cert_file, 'wt').write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-    open(key_file, 'wt').write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+    open(cert_file, 'wb').write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+    open(key_file, 'wb').write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))

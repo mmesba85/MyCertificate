@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import sys
@@ -20,8 +20,7 @@ parser.add_argument("-file", type=str,
         default=False)
 parser.add_argument("-conf", type=str,
         help="Configuration file containing the name of the subject of the request",
-        default=False,
-        required='-gen' and 'CRT' in sys.argv or 'gen' and 'CSR' in sys.argv)
+        default=False)
 parser.add_argument("-digest", type=str,
         help="Digestion method to use for signing",
         default="sha256")
@@ -48,7 +47,6 @@ parser.add_argument("-ocrt", type=str,
         required=False)
 
 args = parser.parse_args()
-print(args)
 if args.gen:
     if args.gen == 'KEY':
         gen.generate_key(args.ktype, args.bits)
@@ -56,8 +54,15 @@ if args.gen:
     if args.serial is None:
         args.serial = -1
     f = args.conf
-    with open(f, 'r') as file:
-        name = yaml.load(file, Loader=yaml.FullLoader)
+    
+    name = {}
+    try:
+        with open(f, 'r') as file:
+            name = yaml.safe_load(file)
+
+    except Exception as e:
+        print('Error while reading Configuration File. Configuration File must be in Yaml form.')
+        print(e)
 
     if args.gen == 'CRT':
         gen.create_selfsigned_crt(args.ktype,
