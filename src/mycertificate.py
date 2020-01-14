@@ -4,16 +4,24 @@ import argparse
 import sys
 import yaml
 import gen
+import check
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-gen", type=str,
         help="For generation",
-        choices=["CRT", "CSR"],
+        choices=["CRT", "CSR", "KEY"],
+        default=False)
+parser.add_argument("-check", type=str,
+        help="For cheking",
+        choices=["CRT", "CSR", "KEY"],
+        default=False)
+parser.add_argument("-file", type=str,
+        help="File to be checked",
         default=False)
 parser.add_argument("-conf", type=str,
         help="Configuration file containing the name of the subject of the request",
         default=False,
-        required='-gen' in sys.argv)
+        required='-gen' and 'CRT' in sys.argv or 'gen' and 'CSR' in sys.argv)
 parser.add_argument("-digest", type=str,
         help="Digestion method to use for signing",
         default="sha256")
@@ -42,6 +50,9 @@ parser.add_argument("-ocrt", type=str,
 args = parser.parse_args()
 print(args)
 if args.gen:
+    if args.gen == 'KEY':
+        gen.generate_key(args.ktype, args.bits)
+        exit(0)
     if args.serial is None:
         args.serial = -1
     f = args.conf
@@ -57,5 +68,14 @@ if args.gen:
     elif args.gen == 'CSR':
         gen.create_csr(args.pkey, name, args.digest, 
                         args.ktype, args.bits)
+
+elif args.check and args.file:
+    if args.check == 'CRT':
+        check.check_crt(args.file)
+    elif args.check == 'CSR':
+        check.check_csr(args.file)
+    elif args.check == 'KEY':
+        check.check_key(args.file)
+
 
 
