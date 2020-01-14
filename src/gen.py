@@ -37,8 +37,12 @@ Returns:    public key
 """
 def load_key(filename):
     key = open(filename)
-    res = crypto.load_privatekey(crypto.FILETYPE_PEM, key.read())
-    return res
+    try:
+        res = crypto.load_privatekey(crypto.FILETYPE_PEM, key.read())
+        return res
+    except Exception as e:
+        print(e)
+
 
 """
 Create a certificate request.
