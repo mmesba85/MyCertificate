@@ -9,11 +9,11 @@ import check
 parser = argparse.ArgumentParser()
 parser.add_argument("-gen", type=str,
         help="For generation",
-        choices=["CRT", "CSR", "KEY"],
+        choices=["CRT", "CSR", "KEY", "CA"],
         default=False)
 parser.add_argument("-check", type=str,
         help="For cheking",
-        choices=["CRT", "CSR", "KEY"],
+        choices=["CRT", "CSR", "KEY", "CA"],
         default=False)
 parser.add_argument("-file", type=str,
         help="File to be checked",
@@ -46,6 +46,8 @@ parser.add_argument("-ocrt", type=str,
         help="Output file for the self signed generated certificate",
         required=False)
 
+
+
 args = parser.parse_args()
 if args.gen:
     if args.gen == 'KEY':
@@ -65,7 +67,7 @@ if args.gen:
         print(e)
 
     if args.gen == 'CRT':
-        gen.create_selfsigned_crt(args.ktype,
+        gen.create_selfsigned_crt(args.pkey, args.ktype,
             args.bits, name, args.okey, 
             args.ocrt, args.digest, args.expr,
             args.serial)
@@ -73,6 +75,12 @@ if args.gen:
     elif args.gen == 'CSR':
         gen.create_csr(args.pkey, name, args.digest, 
                         args.ktype, args.bits)
+
+    elif args.gen == 'CA':
+        gen.create_ca(args.ktype,
+            args.bits, name, args.okey, 
+            args.ocrt, args.digest, args.expr,
+            args.serial)
 
 elif args.check and args.file:
     if args.check == 'CRT':
