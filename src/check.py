@@ -12,7 +12,7 @@ def print_subject(req):
     print("Orgainistional unit: %s" % components.get(b'OU').decode())
     print("City/locality: %s" % components.get(b'L').decode())
     print("State/province: %s" % components.get(b'ST').decode())
-    print("Country: %s", components.get(b'C').decode())
+    print("Country: %s" % components.get(b'C').decode())
     print("Signature algorithm: ")
     print("Key algorithm: %s" % key_type)
     print("Key size: %s" % key.bits())

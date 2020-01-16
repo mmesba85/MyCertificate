@@ -78,6 +78,17 @@ Nous générons des  certificat x509.
 
 Nous avons utilisé la bibliothèque pyopenssl pour la génération des clés, CSR et certificats.
 
+Afin de générarer un certificat, les informations concernant l'autorité seront données dans un fichier de configuration de format YAML
+##### exemple
+```
+C: FR
+ST: Val-De-Marne
+L: Kremlin-Bicetre
+O: Certificate&co        
+OU: titi
+CN: toto
+emailAddress: titi@mail.com
+```
 ### Usage
 ```
 $ python3 mycertificate.py -h
@@ -105,11 +116,58 @@ optional arguments:
 ```
 
 ### Exemple d'utilisation
-
+- Key generation:
 ```
-
+maroua@maroua-XPS-13:~/Documents/Projets/MyCertificate/src$ python3 mycertificate.py -gen KEY -ktype DSA -bits 2048
+maroua@maroua-XPS-13:~/Documents/Projets/MyCertificate/src$ cat file.key
+-----BEGIN PRIVATE KEY-----
+MIICZQIBADCCAjkGByqGSM44BAEwggIsAoIBAQCPo3EjOmvASIaO7KuQGNOVPz9r
+yLnPhebBSoikhEY9JOov1ssLe9vIjgrZPwfDLxusLePNHHoADpCxmlQEilpyM1dE
+XNTC0y2g1ITjcM4twMKyZHsYqleabw+BcjX5Yjf/Xs/5J7NOmfMcvFhJrRe98DvS
+EdZ1BRX85p8Pe1TYvzK03T6jjd402kt16qGL053SkfbBWHJGW3IB202NI5liMwZ5
+JS9nh7YlBpw5bfE9CkohFcJSoy6Iis+B/AoRjP6QPXYFBsyuELfqQo37RFRWSpMB
+RsOyuaKIBJQptat2QJauH92F1FnqotTmcoukQ2r5lAlszHz30s0s+fmSMmDHAiEA
+9TeM1MT7vDMkISlFvtZ+u2rRHYdZuIJVFSnojJ3fYFUCggEAICbZ/VgyNhO57fu/
+atAtxMpO2Wbgjn1gYjCQtRw0rpCOWcjOtMndz2URxKgdPr1PCzjYsDz8BceSCvOP
+gcIZzXfc1aHjJASPB8nB9xKAlMzdEmorA0btrZR807gotFZlUPQlEkZzIDfEPo+z
+iqF6fMk4Nmowe0qwZ63GmeIxcb0Tn/t8c1HZlr/ANibTPuiLqoHpsPZlHydIcMoc
+VWsKKj/516DOeWnXfBLEepX3ie6dcXvq09jN2phVWMidZXDJtJ147JpgS4P1EiQJ
+vlwGIOD7HZYa2DVAfh3FU5qmFpfx3NoLHfZ5WW4EQHyu4f1LvVDXD3bfuGFWC9pu
+mTtXggQjAiEAviHYzNFHdpfZckpNGTowylOXLwd1gSgAGJD8Qw0yMvI=
+-----END PRIVATE KEY-----
 ```
-
+- CSR generation:
+```
+maroua@maroua-XPS-13:~/Documents/Projets/MyCertificate/src$ python3 mycertificate.py -gen CSR -conf conf.yaml -ktype RSA -bits 1024 
+maroua@maroua-XPS-13:~/Documents/Projets/MyCertificate/src$ cat file.csr
+-----BEGIN CERTIFICATE REQUEST-----
+MIIB1DCCAT0CAQAwgZMxCzAJBgNVBAYTAkZSMRUwEwYDVQQIDAxWYWwtRGUtTWFy
+bmUxGDAWBgNVBAcMD0tyZW1saW4tQmljZXRyZTEXMBUGA1UECgwOQ2VydGlmaWNh
+dGUmY28xDTALBgNVBAsMBHRpdGkxDTALBgNVBAMMBHRvdG8xHDAaBgkqhkiG9w0B
+CQEWDXRpdGlAbWFpbC5jb20wgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAOvk
+xfL4nV3LNlyE58EsRmIKYZGCS2ThX8b/ja0OsVlkS0yHP46tF0pvUj3Xw55wjw3m
+GqPhWcIofGOMVZGIwpEwRrFlN6PM+wp1sv6W+JQPzwTlpTlP3GIAamhGMrkVWwhF
+HBdIxUJdHh2RA/1TgancQK7Zcy7xKts1ochlkXUJAgMBAAGgADANBgkqhkiG9w0B
+AQsFAAOBgQCcoJ9S0zgyDbRwyshFriAMJjlqwTz+ck0fUUWy1gqfMwGzgJfmJ5L2
+84RbZUsneNG5xj+eqNLICDUg/a15lHmjtV2NUtuyA0dndYsdaS56RRsHrYs4AJn+
+M+9XLkOaA9WgJldBstQzX6U9zxW4gg4w3p38/BRbPPkHRvdTktMFkA==
+-----END CERTIFICATE REQUEST-----
+```
+- Check CSR:
+```
+maroua@maroua-XPS-13:~/Documents/Projets/MyCertificate/src$ python3 mycertificate.py -check CSR -file file.csr
+Certificate Request:
+Common name: toto
+Organisation: Certificate&co
+Orgainistional unit: titi
+City/locality: Kremlin-Bicetre
+State/province: Val-De-Marne
+Country: FR
+Signature algorithm: 
+Key algorithm: RSA
+Key size: 1024
+Version: 0
+```
 ## Difficultés rencontrées
 
 Nous avons pris beaucoup de temps au début du projet pour la compréhension des différentes fonctions du package pyopenssl.
